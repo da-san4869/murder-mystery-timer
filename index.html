@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>マーダーミステリー タイマー</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #1a0a0a;
+      color: #f0e6d3;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* ヘッダー */
+    .header {
+      background: #0a0304;
+      border-bottom: 1px solid #3a1520;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left { display: flex; flex-direction: column; }
+    .header-title { font-size: 16px; color: #c9a96e; font-weight: 500; }
+    .game-title-label { font-size: 12px; color: #7a5545; margin-top: 2px; }
+
+    .tabs { display: flex; gap: 4px; }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid #2a1015;
+      border-radius: 6px;
+      color: #7a5545;
+      font-size: 13px;
+      padding: 6px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active, .tab-btn:hover {
+      background: #1f0a10;
+      border-color: #7a2535;
+      color: #c9a96e;
+    }
+
+    .content { padding: 20px; }
+
+    /* ===== タイマー画面 ===== */
+    .phase-info {
+      background: #120606;
+      border: 1px solid #3a1520;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .phase-name { font-size: 20px; color: #c9a96e; margin-bottom: 4px; }
+    .phase-index { font-size: 13px; color: #7a5545; }
+
+    .phase-list-btn {
+      background: #1f0a10;
+      border: 1px solid #3a1520;
+      border-radius: 8px;
+      color: #9a6555;
+      font-size: 13px;
+      padding: 8px 14px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+
+    .phase-list-btn:hover {
+      background: #2a0f18;
+      border-color: #7a2535;
+      color: #c9a96e;
+    }
+
+    .timer-display {
+      font-size: 72px;
+      font-weight: 500;
+      text-align: center;
+      color: #f0e6d3;
+      letter-spacing: 0.02em;
+      font-variant-numeric: tabular-nums;
+      margin: 24px 0;
+      transition: color 0.5s;
+    }
+
+    .timer-display.warning { color: #e07070; }
+
+    /* アラート表示バッジ */
+    .alert-badges {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .alert-badge {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: #1f1205;
+      border: 1px solid #6a4010;
+      color: #c9a96e;
+    }
+
+    .alert-badge.fired {
+      background: #0a130a;
+      border-color: #2a452a;
+      color: #60a060;
+      text-decoration: line-through;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #6b1f28;
+      border-color: #a03040;
+      color: #f0d0b8;
+    }
+
+    .btn-primary:hover { background: #851825; }
+
+    .btn-secondary {
+      background: #1f0a10;
+      border-color: #3a1520;
+      color: #9a6555;
+    }
+
+    .btn-secondary:hover { background: #2a0f18; color: #c9a96e; }
+
+    .btn-danger {
+      background: #0f0f1f;
+      border-color: #30304a;
+      color: #7070a0;
+    }
+
+    .btn-danger:hover { background: #1a1a2a; color: #9090c0; }
+
+    /* ===== 設定画面 ===== */
+    .section-title {
+      font-size: 12px;
+      color: #7a5545;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #2a1015;
+    }
+
+    .settings-section { margin-bottom: 28px; }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #120606;
+      border: 1px solid #2a1015;
+      border-radius: 8px;
+      padding: 12px 14px;
+    }
+
+    .input-row label { font-size: 14px; color: #c9a96e; flex-shrink: 0; }
+
+    .text-input {
+      background: #0a0304;
+      border: 1px solid #3a1520;
+      border-radius: 6px;
+      color: #f0e6d3;
+      font-size: 14px;
+      padding: 6px 10px;
+      flex: 1;
+    }
+
+    .text-input:focus { outline: none; border-color: #7a2535; }
+
+    /* フェーズカード */
+    .phase-card {
+      background: #120606;
+      border: 1px solid #2a1015;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+
+    .phase-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .phase-card-num {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #1f0a10;
+      border: 1px solid #3a1520;
+      color: #c9a96e;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .phase-card-label { font-size: 14px; color: #c9a96e; flex: 1; }
+
+    .phase-card-actions { display: flex; gap: 6px; }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid #2a1015;
+      border-radius: 6px;
+      color: #5a3530;
+      font-size: 14px;
+      padding: 5px 9px;
+      cursor: pointer;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .icon-btn:hover { color: #c9a96e; border-color: #5a2535; background: #1a0810; }
+    .icon-btn.delete:hover { color: #e07070; border-color: #7a2535; }
+
+    .phase-card-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .field-label {
+      font-size: 12px;
+      color: #5a3530;
+      width: 52px;
+      flex-shrink: 0;
+    }
+
+    .num-input {
+      background: #0a0304;
+      border: 1px solid #3a1520;
+      border-radius: 6px;
+      color: #f0e6d3;
+      font-size: 14px;
+      padding: 6px 10px;
+      width: 68px;
+      text-align: center;
+    }
+
+    .num-input:focus { outline: none; border-color: #7a2535; }
+
+    /* アラート設定 */
+    .alert-setting-area {
+      background: #0a0304;
+      border: 1px solid #2a1015;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 4px;
+    }
+
+    .alert-setting-title {
+      font-size: 12px;
+      color: #7a5545;
+      margin-bottom: 10px;
+    }
+
+    .alert-rows { display: flex; flex-direction: column; gap: 8px; }
+
+    .alert-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .alert-row-label { font-size: 12px; color: #5a3530; width: 36px; flex-shrink: 0; }
+    .alert-row span { font-size: 12px; color: #5a3530; }
+
+    .alert-toggle {
+      width: 18px;
+      height: 18px;
+      accent-color: #7a2535;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .add-phase-btn {
+      width: 100%;
+      background: #120606;
+      border: 1px dashed #3a1520;
+      border-radius: 10px;
+      color: #5a2535;
+      padding: 12px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .add-phase-btn:hover {
+      border-color: #7a2535;
+      color: #c9a96e;
+      background: #1a0808;
+    }
+
+    .save-btn {
+      width: 100%;
+      background: #6b1f28;
+      border: 1px solid #a03040;
+      border-radius: 10px;
+      color: #f0d0b8;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .save-btn:hover { background: #851825; }
+
+    .save-msg {
+      text-align: center;
+      font-size: 13px;
+      color: #60a060;
+      margin-top: 10px;
+      min-height: 20px;
+    }
+
+    /* フェーズ選択パネル */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 10;
+    }
+
+    .overlay.show { display: block; }
+
+    .phase-panel {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #120606;
+      border: 1px solid #3a1520;
+      border-radius: 16px;
+      padding: 24px;
+      width: 90%;
+      max-width: 400px;
+      z-index: 20;
+    }
+
+    .phase-panel.show { display: block; }
+
+    .phase-panel h2 {
+      font-size: 16px;
+      color: #c9a96e;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .phase-panel-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      color: #7a5545;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    .phase-panel-close:hover { color: #c9a96e; }
+
+    .phase-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .phase-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #0a0306;
+      border: 1px solid #1f0f15;
+      border-radius: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .phase-list-item:hover { border-color: #7a2535; background: #150a10; }
+    .phase-list-item.current { border-color: #7a2535; background: #1f0a10; }
+    .phase-list-item.done { opacity: 0.45; }
+
+    .phase-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #1f0a10;
+      border: 1px solid #3a1520;
+      color: #c9a96e;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .phase-list-item.current .phase-num {
+      background: #6b1f28;
+      border-color: #a03040;
+      color: #f0d0b8;
+    }
+
+    .phase-list-item.done .phase-num {
+      background: #0a130a;
+      border-color: #2a452a;
+      color: #60a060;
+    }
+
+    .phase-item-name { font-size: 15px; color: #d4b090; flex: 1; }
+    .phase-item-duration { font-size: 13px; color: #7a5545; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="header-title">🕯 マーダーミステリー タイマー</div>
+      <div class="game-title-label" id="gameTitleLabel">ゲームタイトル未設定</div>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tabTimer" onclick="showTab('timer')">タイマー</button>
+      <button class="tab-btn" id="tabSettings" onclick="showTab('settings')">設定</button>
+    </div>
+  </div>
+
+  <!-- ===== タイマー画面 ===== -->
+  <div class="content" id="viewTimer">
+
+    <div class="phase-info">
+      <div>
+        <div class="phase-index" id="phaseIndex">フェーズ 1 / 4</div>
+        <div class="phase-name" id="phaseName">導入・キャラクター紹介</div>
+      </div>
+      <button class="phase-list-btn" onclick="openPhasePanel()">一覧 ▼</button>
+    </div>
+
+    <div class="timer-display" id="timerDisplay">10:00</div>
+
+    <div class="alert-badges" id="alertBadges"></div>
+
+    <div class="controls">
+      <button class="btn-secondary" onclick="prevPhase()">◀ 前へ</button>
+      <button class="btn-primary" id="playBtn" onclick="togglePlay()">▶ 開始</button>
+      <button class="btn-secondary" onclick="nextPhase()">次へ ▶</button>
+    </div>
+
+    <div class="controls">
+      <button class="btn-danger" onclick="resetCurrent()">↺ リセット</button>
+    </div>
+
+  </div>
+
+  <!-- ===== 設定画面 ===== -->
+  <div class="content" id="viewSettings" style="display:none;">
+
+    <div class="settings-section">
+      <div class="section-title">ゲーム情報</div>
+      <div class="input-row">
+        <label>タイトル</label>
+        <input type="text" class="text-input" id="gameTitleInput" placeholder="例：犯人は誰だ！">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">フェーズ設定</div>
+      <div id="phaseCards"></div>
+      <button class="add-phase-btn" onclick="addPhase()">＋ フェーズを追加</button>
+    </div>
+
+    <button class="save-btn" onclick="saveSettings()">設定を保存</button>
+    <div class="save-msg" id="saveMsg"></div>
+
+  </div>
+
+  <!-- フェーズ選択パネル -->
+  <div class="overlay" id="overlay" onclick="closePhasePanel()"></div>
+  <div class="phase-panel" id="phasePanel">
+    <h2>フェーズを選択</h2>
+    <button class="phase-panel-close" onclick="closePhasePanel()">✕</button>
+    <div class="phase-list" id="phaseList"></div>
+  </div>
+
+  <script>
+
+    // ===== デフォルトデータ =====
+    const defaultPhases = [
+      {
+        name: '導入・キャラクター紹介',
+        minutes:3,
+        alerts: [
+          { enabled: true,  remaining: 2 },
+          { enabled: true,  remaining: 1 },
+          { enabled: false, remaining: 0 },
+        ]
+      },
+      {
+        name: '調査フェーズ',
+        minutes: 20,
+        alerts: [
+          { enabled: true,  remaining: 10 },
+          { enabled: true,  remaining: 5  },
+          { enabled: true,  remaining: 1  },
+        ]
+      },
+      {
+        name: '議論・推理フェーズ',
+        minutes: 15,
+        alerts: [
+          { enabled: true,  remaining: 5 },
+          { enabled: true,  remaining: 1 },
+          { enabled: false, remaining: 0 },
+        ]
+      },
+      {
+        name: '最終投票',
+        minutes: 5,
+        alerts: [
+          { enabled: true,  remaining: 1 },
+          { enabled: false, remaining: 0 },
+          { enabled: false, remaining: 0 },
+        ]
+      },
+    ];
+
+    // ===== 状態 =====
+    let phases = [];
+    let gameTitle = '';
+    let currentPhase = 0;
+    let remaining = 0;
+    let running = false;
+    let timerInterval = null;
+    let firedAlerts = [];   // 発火済みアラートのインデックス管理
+    let audioCtx = null;
+
+    function setViewStandby() {
+      localStorage.setItem('mmTimerState', JSON.stringify({ view: 'standby' }));
+    }
+
+    function setViewFinish() {
+      localStorage.setItem('mmTimerState', JSON.stringify({ view: 'finish' }));
+    }
+
+    // ===== 初期化 =====
+    function init() {
+      const saved = localStorage.getItem('mmTimerData');
+      if (saved) {
+        const data = JSON.parse(saved);
+        phases = data.phases;
+        gameTitle = data.gameTitle || '';
+      } else {
+        phases = JSON.parse(JSON.stringify(defaultPhases));
+        gameTitle = '';
+        // 初回起動時に自動保存
+        saveToStorage();
+      }
+      loadPhase(0);
+      updateGameTitleLabel();
+    }
+
+    // ===== localStorage 保存 =====
+    function saveToStorage() {
+      localStorage.setItem('mmTimerData', JSON.stringify({ phases, gameTitle }));
+    }
+
+    // ===== タブ切替 =====
+    function showTab(tab) {
+      document.getElementById('viewTimer').style.display    = tab === 'timer'    ? '' : 'none';
+      document.getElementById('viewSettings').style.display = tab === 'settings' ? '' : 'none';
+      document.getElementById('tabTimer').className    = 'tab-btn' + (tab === 'timer'    ? ' active' : '');
+      document.getElementById('tabSettings').className = 'tab-btn' + (tab === 'settings' ? ' active' : '');
+      if (tab === 'settings') renderSettingsCards();
+    }
+
+    // ===== タイマー =====
+    function fmt(secs) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    }
+
+    function loadPhase(idx) {
+      currentPhase = idx;
+      remaining = phases[idx].minutes * 60;
+      running = false;
+      firedAlerts = [];
+      clearInterval(timerInterval);
+      updateTimerDisplay();
+      renderAlertBadges();
+
+      localStorage.setItem('mmTimerState', JSON.stringify({
+    view: 'timer', currentPhase, remaining, running,
+  }));
+    }
+
+function updateTimerDisplay() {
+      const el = document.getElementById('timerDisplay');
+      el.textContent = fmt(remaining);
+      el.className = 'timer-display' + (remaining <= 60 && remaining > 0 ? ' warning' : '');
+
+      document.getElementById('phaseName').textContent = phases[currentPhase].name;
+      document.getElementById('phaseIndex').textContent =
+        'フェーズ ' + (currentPhase + 1) + ' / ' + phases.length;
+
+      const btn = document.getElementById('playBtn');
+      const total = phases[currentPhase].minutes * 60;
+      btn.textContent = running ? '⏸ 一時停止' : (remaining < total ? '▶ 再開' : '▶ 開始');
+
+      // display.html へ状態を送信
+      localStorage.setItem('mmTimerState', JSON.stringify({
+        view: 'timer',
+        currentPhase,
+        remaining,
+        running,
+      }));
+    }
+
+    function renderAlertBadges() {
+      const p = phases[currentPhase];
+      const area = document.getElementById('alertBadges');
+      area.innerHTML = p.alerts
+        .filter(a => a.enabled && a.remaining > 0)
+        .map((a, i) => {
+          const fired = firedAlerts.includes(i);
+          return `<div class="alert-badge ${fired ? 'fired' : ''}">🔔 残り${a.remaining}分</div>`;
+        }).join('');
+    }
+
+function tick() {
+      if (remaining <= 0) {
+        clearInterval(timerInterval);
+        running = false;
+        playSound('end');
+        if (currentPhase < phases.length - 1) {
+          setTimeout(() => { loadPhase(currentPhase + 1); }, 800);
+        } else {
+          setViewFinish();
+        }
+        return;
+      }
+      remaining--;
+
+      // アラートチェック
+      const p = phases[currentPhase];
+      p.alerts.forEach((a, i) => {
+        if (a.enabled && a.remaining > 0 && !firedAlerts.includes(i)) {
+          if (remaining === a.remaining * 60) {
+            firedAlerts.push(i);
+            playSound('alert');
+            renderAlertBadges();
+          }
+        }
+      });
+
+      updateTimerDisplay();
+    }
+
+    function togglePlay() {
+      if (running) {
+        clearInterval(timerInterval);
+        running = false;
+      } else {
+        running = true;
+        timerInterval = setInterval(tick, 1000);
+      }
+      updateTimerDisplay();
+    }
+
+    function prevPhase() {
+      clearInterval(timerInterval);
+      running = false;
+      if (currentPhase > 0) loadPhase(currentPhase - 1);
+    }
+
+    function nextPhase() {
+      clearInterval(timerInterval);
+      running = false;
+      if (currentPhase < phases.length - 1) loadPhase(currentPhase + 1);
+    }
+
+    function resetCurrent() {
+      clearInterval(timerInterval);
+      running = false;
+      loadPhase(currentPhase);
+    }
+
+    // ===== 効果音 =====
+    function playSound(type) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const ctx = audioCtx;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'alert') {
+          osc.frequency.setValueAtTime(880, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.6);
+          gain.gain.setValueAtTime(0.4, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+          osc.start(); osc.stop(ctx.currentTime + 0.6);
+        } else {
+          // フェーズ終了音（ゴング風）
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(220, ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 1.5);
+          gain.gain.setValueAtTime(0.5, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+          osc.start(); osc.stop(ctx.currentTime + 1.5);
+        }
+      } catch(e) {}
+    }
+
+    // ===== フェーズ選択パネル =====
+    function openPhasePanel() {
+      const list = document.getElementById('phaseList');
+      list.innerHTML = phases.map((p, i) => {
+        const done = i < currentPhase;
+        const cur  = i === currentPhase;
+        return `
+          <div class="phase-list-item ${cur ? 'current' : done ? 'done' : ''}"
+               onclick="jumpToPhase(${i})">
+            <div class="phase-num">${done ? '✓' : i + 1}</div>
+            <div class="phase-item-name">${p.name}</div>
+            <div class="phase-item-duration">${p.minutes}分</div>
+          </div>`;
+      }).join('');
+      document.getElementById('overlay').classList.add('show');
+      document.getElementById('phasePanel').classList.add('show');
+    }
+
+    function closePhasePanel() {
+      document.getElementById('overlay').classList.remove('show');
+      document.getElementById('phasePanel').classList.remove('show');
+    }
+
+    function jumpToPhase(idx) {
+      loadPhase(idx);
+      closePhasePanel();
+    }
+
+    // ===== 設定画面 =====
+    function renderSettingsCards() {
+      document.getElementById('gameTitleInput').value = gameTitle;
+
+      const container = document.getElementById('phaseCards');
+      container.innerHTML = phases.map((p, i) => `
+        <div class="phase-card" id="card-${i}">
+          <div class="phase-card-header">
+            <div class="phase-card-num">${i + 1}</div>
+            <div class="phase-card-label">フェーズ ${i + 1}</div>
+            <div class="phase-card-actions">
+              <button class="icon-btn" onclick="movePhase(${i}, -1)" title="上へ">▲</button>
+              <button class="icon-btn" onclick="movePhase(${i},  1)" title="下へ">▼</button>
+              <button class="icon-btn delete" onclick="deletePhase(${i})" title="削除">✕</button>
+            </div>
+          </div>
+          <div class="phase-card-fields">
+            <div class="field-row">
+              <span class="field-label">フェーズ名</span>
+              <input type="text" class="text-input"
+                value="${p.name}"
+                onchange="updatePhaseName(${i}, this.value)">
+            </div>
+            <div class="field-row">
+              <span class="field-label">時間</span>
+              <input type="number" class="num-input"
+                value="${p.minutes}" min="1" max="180"
+                onchange="updatePhaseMinutes(${i}, this.value)">
+              <span style="font-size:13px; color:#7a5545;">分</span>
+            </div>
+            <div class="alert-setting-area">
+              <div class="alert-setting-title">🔔 アラート設定（残り時間で鳴らす）</div>
+              <div class="alert-rows">
+                ${p.alerts.map((a, j) => `
+                  <div class="alert-row">
+                    <span class="alert-row-label">第${j + 1}回</span>
+                    <input type="checkbox" class="alert-toggle"
+                      ${a.enabled ? 'checked' : ''}
+                      onchange="updateAlertEnabled(${i}, ${j}, this.checked)">
+                    <span>残り</span>
+                    <input type="number" class="num-input"
+                      value="${a.remaining}" min="0" max="180"
+                      style="width:56px;"
+                      onchange="updateAlertRemaining(${i}, ${j}, this.value)">
+                    <span>分で鳴らす</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updatePhaseName(i, val) { phases[i].name = val; }
+    function updatePhaseMinutes(i, val) { phases[i].minutes = parseInt(val) || 1; }
+    function updateAlertEnabled(i, j, val) { phases[i].alerts[j].enabled = val; }
+    function updateAlertRemaining(i, j, val) { phases[i].alerts[j].remaining = parseInt(val) || 0; }
+
+    function movePhase(i, dir) {
+      const j = i + dir;
+      if (j < 0 || j >= phases.length) return;
+      [phases[i], phases[j]] = [phases[j], phases[i]];
+      renderSettingsCards();
+    }
+
+    function deletePhase(i) {
+      if (phases.length <= 1) return alert('フェーズは1つ以上必要です');
+      phases.splice(i, 1);
+      renderSettingsCards();
+    }
+
+    function addPhase() {
+      phases.push({
+        name: '新しいフェーズ',
+        minutes: 10,
+        alerts: [
+          { enabled: false, remaining: 5 },
+          { enabled: false, remaining: 1 },
+          { enabled: false, remaining: 0 },
+        ]
+      });
+      renderSettingsCards();
+    }
+
+    function updateGameTitleLabel() {
+      document.getElementById('gameTitleLabel').textContent =
+        gameTitle ? gameTitle : 'ゲームタイトル未設定';
+    }
+
+    function saveSettings() {
+      gameTitle = document.getElementById('gameTitleInput').value.trim();
+      saveToStorage();
+      updateGameTitleLabel();
+      loadPhase(0);
+
+      const msg = document.getElementById('saveMsg');
+      msg.textContent = '✓ 保存しました';
+      setTimeout(() => { msg.textContent = ''; }, 2000);
+    }
+
+    init();
+  </script>
+
+</body>
+</html>
