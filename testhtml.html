@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ロゴ透かし背景サンプル</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400&display=swap');
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #f5f4f0;
+      --text: #2c2c2c;
+      --accent: #6b6b6b;
+
+      /* ========================================
+         ロゴ画像のパスをここで設定してください
+         例: url('assets/logo.png')
+             url('images/company-logo.svg')
+         ======================================== */
+      --logo-url: url('images/title_logo.png');
+
+
+      /* 透かしの初期透明度 (0.0 〜 1.0) */
+      --logo-opacity: 0.112;
+    }
+
+    body {
+      font-family: 'Noto Sans JP', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+      background-color: #2c2c2c;
+    }
+
+    /* ===== 透かしロゴ ===== */
+    body::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-repeat: no-repeat; 
+      background-position: center;
+      background-image: var(--logo-url);
+      background-size: var(--logo-size);
+      opacity: var(--logo-opacity);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== レイアウト ===== */
+    .page {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 3rem 2rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 12px;
+      padding: 2.5rem 3rem;
+      max-width: 560px;
+      width: 100%;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 300;
+      letter-spacing: 0.06em;
+      margin-bottom: 1rem;
+      color: var(--text);
+    }
+
+    p {
+      font-size: 2.3rem;
+      line-height: 1.9;
+      color: white;
+      font-weight: 300;
+    }
+
+    .label {
+      display: inline-block;
+      margin-top: 1.5rem;
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #aaa;
+    }
+
+    /* ===== 透かし調整スライダー ===== */
+    .controls {
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .controls label {
+      font-size: 0.8rem;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: #888;
+    }
+
+    #opacity-value {
+      font-size: 0.8rem;
+      color: var(--accent);
+      min-width: 2.5rem;
+      text-align: right;
+    }
+
+    .fade-in {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .fade-in.visible { opacity: 1; }
+
+  </style>
+</head>
+<body>
+
+<div class="page">
+  <div>
+    <p class="monologue">
+      <span class="fade-in">2350年。</span><br><br>
+      <span class="fade-in">地下奥深くに、とある研究所があった。</span><br><br>
+      <span class="fade-in">水原研究所。水原塁博士が立ち上げたその場所ではタイムマシンに関する研究が日夜行われている。</span><br><br>
+      <span class="fade-in">タイムマシンは時空を移動できる乗り物であり、人類の希望だ。みんなタイムマシンの完成を待ち望んでいる。</span><br><br>
+      <span class="fade-in">そんな研究所で発生した、予想外のトラブル。そして突如現れた謎の人物。</span><br><br>
+      <span class="fade-in">そこで観測されたものはーーー。</span>
+    </p>
+  </div>
+</div>
+
+<script>
+  const spans = document.querySelectorAll('.fade-in');
+  const pageLoadTime = Date.now();
+  let animationPlayed = false;
+
+  setInterval(() => {
+    if (animationPlayed) return;
+    const t = parseInt(localStorage.getItem('mmDonyuStart') || '0');
+    if (t > pageLoadTime) {
+      animationPlayed = true;
+      localStorage.removeItem('mmDonyuStart');
+      spans.forEach((span, i) => setTimeout(() => span.classList.add('visible'), i * 1000));
+    }
+  }, 300);
+</script>
+
+</body>
+</html>

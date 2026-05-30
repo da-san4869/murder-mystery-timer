@@ -164,6 +164,17 @@
 
     .btn-danger:hover { background: #1a1a2a; color: #9090c0; }
 
+    .btn-explosion {
+      background: #3a1a00;
+      border-color: #c05010;
+      color: #ffb060;
+      font-size: 20px;
+      padding: 16px 40px;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-explosion:hover { background: #5a2800; border-color: #e06020; color: #ffd090; }
+
     /* ===== 設定画面 ===== */
     .section-title {
       font-size: 12px;
@@ -459,6 +470,100 @@
 
     .phase-item-name { font-size: 15px; color: #d4b090; flex: 1; }
     .phase-item-duration { font-size: 13px; color: #7a5545; }
+
+    /* ===== 文章表示画面 ===== */
+    .textarea-row {
+      background: #120606;
+      border: 1px solid #2a1015;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+
+    .textarea-label {
+      font-size: 12px;
+      color: #7a5545;
+      margin-bottom: 8px;
+    }
+
+    .text-area-input {
+      background: #0a0304;
+      border: 1px solid #3a1520;
+      border-radius: 6px;
+      color: #f0e6d3;
+      font-size: 14px;
+      padding: 8px 10px;
+      width: 100%;
+      min-height: 160px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.6;
+    }
+
+    .text-area-input:focus { outline: none; border-color: #7a2535; }
+
+    .mode-status {
+      font-size: 12px;
+      color: #7a5545;
+      background: #120606;
+      border: 1px solid #2a1015;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+
+    .mode-status span { color: #c9a96e; font-weight: 500; }
+
+    /* 表示タイプセレクト */
+    .type-select {
+      background: #0a0304;
+      border: 1px solid #3a1520;
+      border-radius: 6px;
+      color: #f0e6d3;
+      font-size: 13px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+
+    .type-select:focus { outline: none; border-color: #7a2535; }
+
+    /* 導入文プレビュー */
+    .donyu-preview-wrap {
+      margin-top: 8px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #2a1015;
+      height: 340px;
+      position: relative;
+    }
+
+    .donyu-preview-wrap iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+
+    .donyu-preview-label {
+      font-size: 11px;
+      color: #5a3530;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    /* 音声ファイルセレクト */
+    .sound-select {
+      background: #0a0304;
+      border: 1px solid #3a1520;
+      border-radius: 6px;
+      color: #9a8070;
+      font-size: 11px;
+      padding: 3px 6px;
+      cursor: pointer;
+      max-width: 140px;
+    }
+
+    .sound-select:focus { outline: none; border-color: #7a2535; }
   </style>
 </head>
 <body>
@@ -470,6 +575,7 @@
     </div>
     <div class="tabs">
       <button class="tab-btn active" id="tabTimer" onclick="showTab('timer')">タイマー</button>
+      <button class="tab-btn" id="tabText" onclick="showTab('text')">文章表示</button>
       <button class="tab-btn" id="tabSettings" onclick="showTab('settings')">設定</button>
     </div>
   </div>
@@ -499,6 +605,17 @@
       <button class="btn-danger" onclick="resetCurrent()">↺ リセット</button>
     </div>
 
+    <div class="controls" id="explosionControls" style="display:none;">
+      <button class="btn-explosion" onclick="playExplosion()">💥 爆発</button>
+    </div>
+
+    <div class="controls" id="donyuControls" style="display:none;">
+      <button class="btn-primary" onclick="startDonyu()">▶ 開始</button>
+    </div>
+    <div class="controls" id="questionControls" style="display:none;">
+      <button class="btn-primary" onclick="startquestion()">▶ 開始</button>
+    </div>
+
   </div>
 
   <!-- ===== 設定画面 ===== -->
@@ -523,6 +640,33 @@
 
   </div>
 
+  <!-- ===== 文章表示画面 ===== -->
+  <div class="content" id="viewText" style="display:none;">
+
+    <div class="settings-section">
+      <div class="section-title">文章表示モード</div>
+
+      <div class="mode-status" id="displayModeStatus">現在のモード：<span>タイマー表示</span></div>
+
+      <div class="textarea-row">
+        <div class="textarea-label">タイトル</div>
+        <input type="text" class="text-input" id="textTitle" placeholder="例：重要なお知らせ" style="width:100%;">
+      </div>
+
+      <div class="textarea-row">
+        <div class="textarea-label">本文</div>
+        <textarea class="text-area-input" id="textBody" placeholder="ここに表示する文章を入力..."></textarea>
+      </div>
+
+      <div class="controls" style="justify-content:flex-start; margin-bottom:0;">
+        <button class="btn-primary" onclick="showTextMode()">文章を表示</button>
+        <button class="btn-secondary" onclick="showTimerMode()">タイマーに戻す</button>
+      </div>
+      <div class="save-msg" id="displayModeMsg"></div>
+    </div>
+
+  </div>
+
   <!-- フェーズ選択パネル -->
   <div class="overlay" id="overlay" onclick="closePhasePanel()"></div>
   <div class="phase-panel" id="phasePanel">
@@ -533,43 +677,108 @@
 
   <script>
 
+    // ===== 音声ファイル一覧 =====
+    const MP3_FILES = [
+      'Church_Bell03-01(High-Short).mp3',
+      'Church_Bell03-02(High-Mid).mp3',
+      'Explosion07-3(Far).mp3',
+    ];
+
+    // ===== フェーズタイプ定義 =====
+    const PHASE_TYPES = {
+      'donyu':  { mode: 'donyu', label: '導入',  url: 'testhtml.html' },
+      '???':    { mode: 'donyu', label: '???',   url: 'question.html' },
+      'endding':    { mode: 'donyu', label: '???',   url: 'endding.html' },
+      'action':    { mode: 'donyu', label: '???',   url: 'action.html' },
+
+      'timer':  { mode: 'timer', label: 'タイマー' },
+      'ending': { mode: 'text',  label: 'エンディング' },
+    };
+
     // ===== デフォルトデータ =====
     const defaultPhases = [
       {
-        name: '導入・キャラクター紹介',
-        minutes:3,
+        name: '導入',
+        type: 'donyu',
+        minutes: 0,
+        alerts: []
+      },
+      {
+        name: 'キャラクター紹介',
+        type: 'timer',
+        minutes: 10,
         alerts: [
-          { enabled: true,  remaining: 2 },
-          { enabled: true,  remaining: 1 },
-          { enabled: false, remaining: 0 },
+          { enabled: true,  remaining: 1, sound: 'Church_Bell03-01(High-Short).mp3' },
         ]
       },
       {
-        name: '調査フェーズ',
-        minutes: 20,
+        name: 'PROLOGUE',
+        type: 'timer',
+        minutes: 6,
         alerts: [
-          { enabled: true,  remaining: 10 },
-          { enabled: true,  remaining: 5  },
-          { enabled: true,  remaining: 1  },
+          { enabled: true,  remaining: 5, sound: 'Church_Bell03-01(High-Short).mp3' },
+          { enabled: true,  remaining: 1, sound: 'Church_Bell03-02(High-Mid).mp3' }
         ]
       },
       {
-        name: '議論・推理フェーズ',
-        minutes: 15,
+        name: '調査フェイズ',
+        type: 'timer',
+        minutes: 40,
         alerts: [
-          { enabled: true,  remaining: 5 },
-          { enabled: true,  remaining: 1 },
-          { enabled: false, remaining: 0 },
+          { enabled: true,  remaining: 20, sound: 'Church_Bell03-01(High-Short).mp3' },
+          { enabled: true,  remaining: 10, sound: 'Church_Bell03-01(High-Short).mp3' },
+          { enabled: false, remaining: 5,  sound: 'Church_Bell03-01(High-Short).mp3' },
+          { enabled: false, remaining: 1,  sound: 'Church_Bell03-02(High-Mid).mp3' },
         ]
       },
       {
-        name: '最終投票',
+        name: '解答フェイズ&拘束フェイズ',
+        type: 'timer',
         minutes: 5,
         alerts: [
-          { enabled: true,  remaining: 1 },
-          { enabled: false, remaining: 0 },
-          { enabled: false, remaining: 0 },
+          { enabled: true,  remaining: 1, sound: 'Church_Bell03-01(High-Short).mp3' }
         ]
+      },
+      {
+        name: 'アクションフェイズ',
+        type: 'action',
+        minutes: 0,
+        alerts: []
+      },
+      {
+        name: 'ENDING',
+        type: 'endding',
+        minutes: 0,
+        alerts: []
+      },
+      {
+        name: '???',
+        type: '???',
+        minutes: 0,
+        alerts: []
+      },
+      {
+        name: 'PROLOGUE',
+        type: 'timer',
+        minutes: 10,
+        alerts: [
+          { enabled: true,  remaining: 5, sound: 'Church_Bell03-01(High-Short).mp3' },
+          { enabled: true,  remaining: 1, sound: 'Church_Bell03-02(High-Mid).mp3' }
+        ]
+      },
+      {
+        name: '調査フェイズ',
+        type: 'timer',
+        minutes: 5,
+        alerts: [
+          { enabled: false, remaining: 1, sound: 'Church_Bell03-02(High-Mid).mp3' },
+        ]
+      },
+      {
+        name: 'ENDING',
+        type: 'endding',
+        minutes: 0,
+        alerts: []
       },
     ];
 
@@ -593,17 +802,12 @@
 
     // ===== 初期化 =====
     function init() {
-      const saved = localStorage.getItem('mmTimerData');
-      if (saved) {
-        const data = JSON.parse(saved);
-        phases = data.phases;
-        gameTitle = data.gameTitle || '';
-      } else {
+
         phases = JSON.parse(JSON.stringify(defaultPhases));
         gameTitle = '';
         // 初回起動時に自動保存
         saveToStorage();
-      }
+      
       loadPhase(0);
       updateGameTitleLabel();
     }
@@ -617,9 +821,38 @@
     function showTab(tab) {
       document.getElementById('viewTimer').style.display    = tab === 'timer'    ? '' : 'none';
       document.getElementById('viewSettings').style.display = tab === 'settings' ? '' : 'none';
+      document.getElementById('viewText').style.display     = tab === 'text'     ? '' : 'none';
       document.getElementById('tabTimer').className    = 'tab-btn' + (tab === 'timer'    ? ' active' : '');
       document.getElementById('tabSettings').className = 'tab-btn' + (tab === 'settings' ? ' active' : '');
+      document.getElementById('tabText').className     = 'tab-btn' + (tab === 'text'     ? ' active' : '');
       if (tab === 'settings') renderSettingsCards();
+      if (tab === 'text') updateDisplayModeStatus();
+    }
+
+    // ===== 文章表示モード =====
+    function updateDisplayModeStatus() {
+      const mode = localStorage.getItem('mmDisplayMode') || 'timer';
+      const el = document.getElementById('displayModeStatus');
+      el.innerHTML = '現在のモード：<span>' + (mode === 'text' ? '文章表示' : 'タイマー表示') + '</span>';
+    }
+
+    function showTextMode() {
+      const title = document.getElementById('textTitle').value;
+      const body  = document.getElementById('textBody').value;
+      localStorage.setItem('mmDisplayText', JSON.stringify({ title, body }));
+      localStorage.setItem('mmDisplayMode', 'text');
+      updateDisplayModeStatus();
+      const msg = document.getElementById('displayModeMsg');
+      msg.textContent = '✓ 文章モードに切り替えました';
+      setTimeout(() => { msg.textContent = ''; }, 2000);
+    }
+
+    function showTimerMode() {
+      localStorage.setItem('mmDisplayMode', 'timer');
+      updateDisplayModeStatus();
+      const msg = document.getElementById('displayModeMsg');
+      msg.textContent = '✓ タイマーモードに切り替えました';
+      setTimeout(() => { msg.textContent = ''; }, 2000);
     }
 
     // ===== タイマー =====
@@ -656,6 +889,11 @@ function updateTimerDisplay() {
       const total = phases[currentPhase].minutes * 60;
       btn.textContent = running ? '⏸ 一時停止' : (remaining < total ? '▶ 再開' : '▶ 開始');
 
+      const phaseType = phases[currentPhase].type || '';
+      document.getElementById('explosionControls').style.display = phaseType === 'ending' ? '' : 'none';
+      document.getElementById('donyuControls').style.display = phaseType === 'donyu' ? '' : 'none';
+      document.getElementById('questionControls').style.display = phaseType === '???' ? '' : 'none';
+
       // display.html へ状態を送信
       localStorage.setItem('mmTimerState', JSON.stringify({
         view: 'timer',
@@ -680,14 +918,10 @@ function tick() {
       if (remaining <= 0) {
         clearInterval(timerInterval);
         running = false;
-        playSound('end');
-        if (currentPhase < phases.length - 1) {
-          setTimeout(() => { loadPhase(currentPhase + 1); }, 800);
-        } else {
-          setViewFinish();
-        }
+        updateTimerDisplay();
         return;
       }
+
       remaining--;
 
       // アラートチェック
@@ -696,7 +930,7 @@ function tick() {
         if (a.enabled && a.remaining > 0 && !firedAlerts.includes(i)) {
           if (remaining === a.remaining * 60) {
             firedAlerts.push(i);
-            playSound('alert');
+            playAlertSound(a.sound);
             renderAlertBadges();
           }
         }
@@ -705,6 +939,7 @@ function tick() {
       updateTimerDisplay();
     }
 
+    
     function togglePlay() {
       if (running) {
         clearInterval(timerInterval);
@@ -735,32 +970,28 @@ function tick() {
     }
 
     // ===== 効果音 =====
-    function playSound(type) {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const ctx = audioCtx;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+    function playExplosion() {
+      playAlertSound('Explosion07-3(Far).mp3');
+    }
 
-        if (type === 'alert') {
-          osc.frequency.setValueAtTime(880, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.6);
-          gain.gain.setValueAtTime(0.4, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-          osc.start(); osc.stop(ctx.currentTime + 0.6);
-        } else {
-          // フェーズ終了音（ゴング風）
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(220, ctx.currentTime);
-          osc.frequency.exponentialRampToValueAtTime(110, ctx.currentTime + 1.5);
-          gain.gain.setValueAtTime(0.5, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
-          osc.start(); osc.stop(ctx.currentTime + 1.5);
-        }
+    function startDonyu() {
+      localStorage.setItem('mmDonyuStart', Date.now());
+    }
+
+       function questionDonyu() {
+      localStorage.setItem('mm???Start', Date.now());
+    }
+
+    function playAlertSound(filename) {
+      if (!filename) return;
+      try {
+        const audio = new Audio('./mp3/' + filename);
+        audio.play();
       } catch(e) {}
     }
+
+
+
 
     // ===== フェーズ選択パネル =====
     function openPhasePanel() {
@@ -770,7 +1001,7 @@ function tick() {
         const cur  = i === currentPhase;
         return `
           <div class="phase-list-item ${cur ? 'current' : done ? 'done' : ''}"
-               onclick="jumpToPhase(${i})">
+            onclick="jumpToPhase(${i})">
             <div class="phase-num">${done ? '✓' : i + 1}</div>
             <div class="phase-item-name">${p.name}</div>
             <div class="phase-item-duration">${p.minutes}分</div>
@@ -794,8 +1025,42 @@ function tick() {
     function renderSettingsCards() {
       document.getElementById('gameTitleInput').value = gameTitle;
 
+      const typeOptions = Object.entries(PHASE_TYPES)
+        .map(([key, pt]) => `<option value="${key}">${pt.label}</option>`)
+        .join('');
+
       const container = document.getElementById('phaseCards');
-      container.innerHTML = phases.map((p, i) => `
+      container.innerHTML = phases.map((p, i) => {
+        const typeKey  = p.type || 'timer';
+        const typeMode = PHASE_TYPES[typeKey]?.mode || 'timer';
+        const isDonyu  = typeMode === 'donyu';
+        const isText   = typeMode === 'text';
+
+        const iframeUrl = PHASE_TYPES[typeKey]?.url || '';
+        const donyuFields = isDonyu ? `
+          <div class="field-row" style="flex-direction:column; align-items:stretch; gap:4px;">
+            <div class="donyu-preview-label">全文プレビュー（${iframeUrl}）</div>
+            <div class="donyu-preview-wrap">
+              <iframe src="${iframeUrl}" loading="lazy"></iframe>
+            </div>
+          </div>` : '';
+
+        const textFields = isText ? `
+          <div class="field-row">
+            <span class="field-label">タイトル</span>
+            <input type="text" class="text-input"
+              value="${(p.displayTitle || '').replace(/"/g, '&quot;')}"
+              onchange="updatePhaseDisplayTitle(${i}, this.value)"
+              placeholder="表示タイトル">
+          </div>
+          <div class="field-row" style="align-items:flex-start;">
+            <span class="field-label" style="padding-top:8px;">本文</span>
+            <textarea class="text-area-input" style="min-height:80px;"
+              onchange="updatePhaseDisplayBody(${i}, this.value)"
+              placeholder="表示する文章...">${(p.displayBody || '').replace(/&/g, '&amp;').replace(/</g, '&lt;')}</textarea>
+          </div>` : '';
+
+        return `
         <div class="phase-card" id="card-${i}">
           <div class="phase-card-header">
             <div class="phase-card-num">${i + 1}</div>
@@ -816,14 +1081,28 @@ function tick() {
             <div class="field-row">
               <span class="field-label">時間</span>
               <input type="number" class="num-input"
-                value="${p.minutes}" min="1" max="180"
+                value="${p.minutes}" min="0" max="180"
                 onchange="updatePhaseMinutes(${i}, this.value)">
               <span style="font-size:13px; color:#7a5545;">分</span>
             </div>
+            <div class="field-row">
+              <span class="field-label">タイプ</span>
+              <select class="type-select" onchange="updatePhaseType(${i}, this.value)">
+                ${Object.entries(PHASE_TYPES).map(([key, pt]) =>
+                  `<option value="${key}"${typeKey === key ? ' selected' : ''}>${pt.label}</option>`
+                ).join('')}
+              </select>
+            </div>
+            ${donyuFields}
+            ${textFields}
             <div class="alert-setting-area">
               <div class="alert-setting-title">🔔 アラート設定（残り時間で鳴らす）</div>
               <div class="alert-rows">
-                ${p.alerts.map((a, j) => `
+                ${p.alerts.map((a, j) => {
+                  const soundOpts = MP3_FILES.map(f =>
+                    `<option value="${f}"${(a.sound || '') === f ? ' selected' : ''}>${f.replace(/\.mp3$/i, '')}</option>`
+                  ).join('');
+                  return `
                   <div class="alert-row">
                     <span class="alert-row-label">第${j + 1}回</span>
                     <input type="checkbox" class="alert-toggle"
@@ -834,20 +1113,35 @@ function tick() {
                       value="${a.remaining}" min="0" max="180"
                       style="width:56px;"
                       onchange="updateAlertRemaining(${i}, ${j}, this.value)">
-                    <span>分で鳴らす</span>
-                  </div>
-                `).join('')}
+                    <span>分</span>
+                    <select class="sound-select" onchange="updateAlertSound(${i}, ${j}, this.value)">
+                      <option value="">なし</option>
+                      ${soundOpts}
+                    </select>
+                  </div>`;
+                }).join('')}
               </div>
             </div>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     function updatePhaseName(i, val) { phases[i].name = val; }
-    function updatePhaseMinutes(i, val) { phases[i].minutes = parseInt(val) || 1; }
+    function updatePhaseMinutes(i, val) {
+      const v = parseInt(val);
+      phases[i].minutes = isNaN(v) || v < 0 ? 0 : v;
+    }
+    function updatePhaseType(i, type) {
+      phases[i].type = type;
+      if ((PHASE_TYPES[type]?.mode || 'timer') !== 'timer') phases[i].minutes = 0;
+      renderSettingsCards();
+    }
+    function updatePhaseDisplayTitle(i, val) { phases[i].displayTitle = val; }
+    function updatePhaseDisplayBody(i, val) { phases[i].displayBody = val; }
     function updateAlertEnabled(i, j, val) { phases[i].alerts[j].enabled = val; }
     function updateAlertRemaining(i, j, val) { phases[i].alerts[j].remaining = parseInt(val) || 0; }
+    function updateAlertSound(i, j, val) { phases[i].alerts[j].sound = val; }
 
     function movePhase(i, dir) {
       const j = i + dir;
@@ -865,11 +1159,12 @@ function tick() {
     function addPhase() {
       phases.push({
         name: '新しいフェーズ',
+        type: 'timer',
         minutes: 10,
         alerts: [
-          { enabled: false, remaining: 5 },
-          { enabled: false, remaining: 1 },
-          { enabled: false, remaining: 0 },
+          { enabled: false, remaining: 5, sound: '' },
+          { enabled: false, remaining: 1, sound: '' },
+          { enabled: false, remaining: 0, sound: '' },
         ]
       });
       renderSettingsCards();
